@@ -366,7 +366,7 @@ def create_track(input_array:np.array, input_track_events:list, instrument:'str'
 #######Main_functions########
 #############################
 
-def convert_array2json(input_array:np.array, beats_per_minute:int = 120, tick_per_beat:int = 4, midi_name:str = 'placeholder') -> str:
+def convert_array2json(input_array:np.array, beats_per_minute:int = 120, tick_per_beat:int = 128, midi_name:str = 'placeholder') -> str:
     """Function for transforming an array with 3 channels (drums,rhythm,lead) into a JSON format that is readable by tone.js
 
     Args:
@@ -400,7 +400,10 @@ def convert_array2json(input_array:np.array, beats_per_minute:int = 120, tick_pe
 
     ####Track information####
 
-    track_length = tick_per_beat*4*4
+    #1 bar version
+    track_length = tick_per_beat*4
+    #4 bar version
+    #track_length = tick_per_beat*4*4
 
     #Convert input track to 1 bar of 4 ticks per beat for demo
     target_length = tick_per_beat * 4
@@ -415,7 +418,8 @@ def convert_array2json(input_array:np.array, beats_per_minute:int = 120, tick_pe
         bar_shortened[:,i] = new_audio_row
 
     bar_shortened[bar_shortened < 0.02] = 0
-
+    input_array = bar_shortened
+    #
 
 
     #Seperate tracks 
