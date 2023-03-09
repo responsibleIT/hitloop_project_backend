@@ -320,3 +320,10 @@ poetry.toml
 pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python,intellij,macos
+model.pkl
+models--ErikSlingerlandHVA--hitloop_model_deep_belief/blobs/fba4c3089cc961a03208ef9c61b15312f8cf121cca01a1a8df40a342053e4eb2
+models--ErikSlingerlandHVA--hitloop_model_deep_belief/refs/main
+.idea/hitloop_project_backend.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
