@@ -10,8 +10,6 @@ convert array to json for frontend
 
 
 
-Model available from hugging face at https://huggingface.co/ErikSlingerlandHVA/hitloop_model_deep_belief
-
 ## Instructions:
 
 TBD
