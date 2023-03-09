@@ -298,7 +298,9 @@ def extract_events(input_array:np.array, beats_per_minute:int = 120, tick_per_be
                 note_array = input_array[:, note]
 
                 #If the note is on tick 0 or if the previous note is 0 to ensure we don't create an event for each tick of a note.
-                if tick == 0 or note_array[(tick-1)] == 0:
+                current_velocity = note_array[(tick)]
+                previous_velocity = note_array[(tick-1)]
+                if tick == 0 or current_velocity != previous_velocity:
 
                     #Decide time and ticks field
                     start_tick = tick
@@ -398,7 +400,28 @@ def convert_array2json(input_array:np.array, beats_per_minute:int = 120, tick_pe
 
     ####Track information####
 
-    track_length = tick_per_beat*4*4
+    #1 bar version
+    track_length = tick_per_beat*4
+    #4 bar version
+    #track_length = tick_per_beat*4*4
+
+    #Convert input track to 1 bar of 4 ticks per beat for demo
+    target_length = tick_per_beat * 4
+    bar_temp = input_array[:512,:]
+
+    bar_shape = np.shape(bar_temp)
+    bar_shortened = np.empty((target_length,bar_shape[1]))
+
+    for i in range(bar_shape[1]):
+        row = bar_temp[:,i]
+        new_audio_row = row[:8 * target_length].reshape((8, target_length)).mean(axis=0)
+        bar_shortened[:,i] = new_audio_row
+
+    bar_shortened[bar_shortened < 0.02] = 0
+    input_array = bar_shortened
+    #
+
+
     #Seperate tracks 
 
 

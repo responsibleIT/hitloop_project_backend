@@ -92,7 +92,7 @@ def generate_midi():
     full_array = np.concatenate((new_array, empty_array, empty_array), axis=1)
 
     # full_array = x.reshape(input_shape)
-    new_json = midi_functions.convert_array2json(full_array)
+    new_json = midi_functions.convert_array2json(full_array, tick_per_beat= 4)
 
     return (new_json)
 
