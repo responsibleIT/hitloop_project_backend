@@ -14,26 +14,47 @@ from pathlib import Path
 from matplotlib import pyplot as plt
 import mido
 import json
+import random
 
+
+target_ticks_per_beat = None
+current_ticks_per_beat = None
+include_rhythm = None
+include_bass = None
+include_accompany = None
+include_melody = None
+continuous_velocity = None
 
 ######################################################################################
-def drum_dict():
+def rhythm_dict():
     """Function for consitently giving the same lookup table for drums. Each entry is the corresponding MIDI channel for each entry in the drum area
     """    
-    drum_lookup_list = [36, 37, 38, 39, 41, 42, 43, 44, 45, 46, 48, 50, 51, 53, 54, 56, 60, 61, 62, 63, 69, 70, 76, 80, 81, 82]
-    return drum_lookup_list
-
-def rhythm_dict():
-    """Function for consitently giving the same lookup table for rhythm. Each entry is the corresponding MIDI channel for each entry in the rhythm area
-    """    
-    rhythm_lookup_list = list(range(0,128))
+    #drum_lookup_list = [36, 37, 38, 39, 41, 42, 43, 44, 45, 46, 48, 50, 51, 53, 54, 56, 60, 61, 62, 63, 69, 70, 76, 80, 81, 82]
+    rhythm_lookup_list = [42, 35, 38]
+    #rhythm_lookup_list = list(range(21,109))
     return rhythm_lookup_list
 
-def lead_dict():
+def bass_dict():
+    """Function for consitently giving the same lookup table for rhythm. Each entry is the corresponding MIDI channel for each entry in the rhythm area
+    """    
+    bass_lookup_list = [64, 35, 38, 43, 53, 52, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+    # bass_lookup_list = list(range(21,109))
+    return bass_lookup_list
+
+def accompany_dict():
     """Function for consitently giving the same lookup table for lead. Each entry is the corresponding MIDI channel for each entry in the lead area
     """    
-    lead_lookup_list = list(range(0,128))
-    return lead_lookup_list
+    accompany_lookup_list = [22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 107]
+    # accompany_lookup_list = list(range(21,109))
+    return accompany_lookup_list
+
+def melody_dict():
+    """Function for consitently giving the same lookup table for lead. Each entry is the corresponding MIDI channel for each entry in the lead area
+    """    
+    melody_lookup_list = [21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 100, 101, 102]
+    # melody_lookup_list = list(range(21,109))
+    return melody_lookup_list
+
 
 #############################################################################################
 ##########################Part 1. Midi to Array##############################################
@@ -41,37 +62,7 @@ def lead_dict():
 ############################
 #######sub_functions########
 ############################
-def get_midi_from_folder(folder_location:str):
-    """Function for loading the midi_drum, midi_rhythm and midi_lead data from a specific folder
-    If one of the files doesn't exist. An empty array of 2048,128 is returned
-
-    Args:
-        folder_location (str): Folder location 
-    """ 
-    try:
-        midi_drum = mido.MidiFile(str(folder_location + '/' + 'drums.mid'))
-    
-    except:
-        print('drums.mid was not found, creating empty array')
-        midi_drum = np.empty((2048,128))
-    
-    try:
-        midi_rhythm = mido.MidiFile(str(folder_location + '/'  + 'rhythm.mid'))
-    
-    except:
-        print('rhythm.mid was not found, creating empty array')
-        midi_rhythm = np.empty((2048,128))
-    
-    try:
-        midi_lead = mido.MidiFile(str(folder_location + '/'  + 'lead.mid'))
-    
-    except:
-        print('lead.mid was not found, creating empty array')
-        midi_lead = np.empty((2048,128))
-    
-    return midi_drum, midi_rhythm, midi_lead
-
-
+#Static functions
 # Code adapted from https://medium.com/analytics-vidhya/convert-midi-file-to-numpy-array-in-python-7d00531890c
 #Converts MIDI message to dictionary of signal, time and note
 def msg2dict(msg):
@@ -136,77 +127,30 @@ def mid2arry(mid, min_msg_pct=0.1):
     return all_arys[min(ends): max(ends)]
 
 
-def clean_array(input_array:np.array, ticks_per_beat:int, target_length:int = 2048):
-    """Function to normalize the array's from the midi-array pipeline.
-    Target size is 4 bars. If too few bars are entered, we will add them together, if too many are used, we will create a cut-off at the end of the 4th bar
+#Converts only track 9 and 10 of MIDI into Raw_Array. This is for the rhythm file to ensure only drum track
+def mid2arry_drums(mid, min_msg_pct=0.1):
+    tracks_len = [len(tr) for tr in mid.tracks]
+    min_n_msg = max(tracks_len) * min_msg_pct
+    # convert each track to nested list
+    all_arys = []
+    for i in range(len(mid.tracks)):
+        if len(mid.tracks[i]) > min_n_msg:
+            #Filter to only channel 9 and 10
+            if mid.tracks[i][1].channel == 9 or mid.tracks[i][1].channel == 10:
+                ary_i = track2seq(mid.tracks[i])
+                all_arys.append(ary_i)
+    # make all nested list the same length
+    max_len = max([len(ary) for ary in all_arys])
+    for i in range(len(all_arys)):
+        if len(all_arys[i]) < max_len:
+            all_arys[i] += [[0] * 128] * (max_len - len(all_arys[i]))
+    all_arys = np.array(all_arys)
+    all_arys = all_arys.max(axis=0)
+    # trim: remove consecutive 0s in the beginning and at the end
+    sums = all_arys.sum(axis=1)
+    ends = np.where(sums > 0)[0]
+    return all_arys[min(ends): max(ends)]
 
-    Returns new array of 2048,y which is a 4 bars of 4/4 time
-
-    Args:
-        input_array (np.array): Input array to be converted into standardised output
-        ticks_per_beat (np.array): Ticks per beat of input array. Taken from original midi file
-        target_length (int, optional): Defines the output length for each audio channel. Defaults to 2048. This is 128 elements for each beat
-    """    
-    new_array = np.empty((2048,128))
-    current_length = np.shape(input_array)[0]
-
-    #Current no of bars, Assuming all bars are 4/4
-    current_bars = int(np.ceil(current_length/ticks_per_beat/4))
-
-    #For too few bars
-    original_array = input_array
-    if current_bars < 4:
-        grow_factor = int(4/current_bars-1)
-        for i in range(0,grow_factor):
-            input_array = np.concatenate((input_array, original_array), axis=0)
-
-    #For too many bars
-    elif current_bars > 4:
-        four_bar_length = ticks_per_beat*4*4
-        input_array = original_array[0:four_bar_length,:]
-
-
-    #Change length of each column(note) to the target_length
-    n_columns = np.shape(input_array)[1]
-    for column in range(0,n_columns):
-        audio_row = input_array[:,column]
-        #Decide how often to devide
-        n = np.floor_divide(current_length,target_length)
-        if n >0:
-            new_audio_row = audio_row[:n * target_length].reshape((n, target_length)).mean(axis=0)
-            #Extra ensurance of output size
-            new_audio_row = new_audio_row[:target_length]
-
-            new_array[:,column] = new_audio_row
-        else:
-            new_audio_row = audio_row[:target_length]
-            new_array[:,column] = new_audio_row
-    
-
-    #Normalize Velocity with normalization factor
-    normalization_factor = 1/128
-    new_array = new_array * normalization_factor
-
-    return(new_array)
-
-
-
-def combine_arrays(drum_array:np.array, rhythm_array:np.array, lead_array:np.array):
-    """Inputs the 3 instruments with normalised array's
-    Output is 1 array where channel at index 0-25 is drums, 128-253 is rhythm and 254-380 is rhythm.
-
-    Args:
-        drum_array (np.array): Array of the drum section
-        rhythm_array (np.array): Array of the rhythm section (placeholder)
-        lead_array (np.array): Array of the lead section (placeholder)
-    """    
-    final_array = np.concatenate((drum_array, rhythm_array, lead_array), axis=1)
-
-    return final_array
-
-#############################
-#######Main_functions########
-#############################
 def convert_midisong_2array(folder_location:str, target_length:int = 2048):
     """Converts a folder containing: lead, drums and rhythm midi into 1 array. Currently dimension of (target_length,381)
 
@@ -235,6 +179,262 @@ def convert_midisong_2array(folder_location:str, target_length:int = 2048):
     complete_array = combine_arrays(midi_drum, midi_rhythm, midi_drum)
 
     return complete_array
+
+def get_midi_from_folder(folder_location:str):
+    """Function for loading the midi_drum, midi_rhythm and midi_lead data from a specific folder
+    If one of the files doesn't exist. An empty array of 2048,128 is returned
+
+    Args:
+        folder_location (str): Folder location 
+    """ 
+
+    target_x = target_ticks_per_beat*4
+    try:
+        midi_rhythm = mido.MidiFile(os.path.join(folder_location, 'drums.mid'))
+    
+    except:
+        print('drums.mid was not found, creating empty array')
+        midi_rhythm = np.empty((target_x,128))
+    
+    try:
+        midi_bass = mido.MidiFile(os.path.join(folder_location, 'bass.mid'))
+    
+    except:
+        print('bass.mid was not found, creating empty array')
+        midi_bass = np.empty((target_x,128))
+    
+    try:
+        midi_accompany = mido.MidiFile(os.path.join(folder_location, 'accompany.mid'))
+    
+    except:
+        print('accompany.mid was not found, creating empty array')
+        midi_accompany = np.empty((target_x,128))
+
+    try:
+        midi_melody = mido.MidiFile(os.path.join(folder_location, 'melody.mid'))
+    
+    except:
+        print('melody.mid was not found, creating empty array')
+        midi_melody = np.empty((target_x,128))
+    
+    return midi_rhythm, midi_bass, midi_accompany, midi_melody
+
+def return_bars(input_array:np.array):
+    """
+    Function converts input_tickrate to target_tickrate
+    normalize the array's velocity.
+    And return the full bars we have
+
+    Returns a list of arrays containing all full bars in a song. Size of each bar is target_ticks_per_beat*4,128
+
+    Args:
+        input_array (np.array): Input array to be converted into standardised output
+    """    
+
+    current_length = np.shape(input_array)[0]
+    n_columns = np.shape(input_array)[1]
+    
+    target_length = int(np.floor(current_length/current_ticks_per_beat*target_ticks_per_beat))
+
+    new_array = np.empty((target_length,n_columns))
+
+    #Change length of each column(note) to the target_length
+    for column in range(0,n_columns):
+        audio_row = input_array[:,column]
+        #Decide how often to devide
+        n = np.floor_divide(current_length,target_length)
+        if n >0:
+            new_audio_row = audio_row[:n * target_length].reshape((n, target_length)).mean(axis=0)
+            #Extra ensurance of output size
+            new_audio_row = new_audio_row[:target_length]
+
+            new_array[:,column] = new_audio_row
+        else:
+            new_audio_row = audio_row[:target_length]
+            new_array[:,column] = new_audio_row
+
+    #Return bars
+    bar_length = 4*target_ticks_per_beat
+    bars = []
+    # select every 200 rows until you can no longer get any full length rows
+    i = 0
+    while i + bar_length <= new_array.shape[0]:
+        selected_rows = new_array[i:i+bar_length]
+        bars.append(selected_rows)
+        # do something with the selected_rows
+        i += bar_length
+
+    return bars
+
+def convert_midi_2array(folder_location:str):
+    """Converts a folder containing: lead, drums and rhythm midi into 1 array. Currently dimension of (target_length,381)
+
+    Args:
+        folder_location (str): location of MIDI files
+    """  
+      
+    midi_rhythm, midi_bass, midi_accompany, midi_melody =get_midi_from_folder(folder_location)
+
+
+    midi_rhythm = mid2arry_drums(midi_rhythm)
+    if continuous_velocity:
+        normalization_factor = 1/128
+        midi_rhythm = midi_rhythm * normalization_factor
+    
+    else:
+        midi_rhythm[midi_rhythm != 0] = 1
+    
+
+    midi_bass = mid2arry(midi_bass)
+    if continuous_velocity:
+        normalization_factor = 1/128
+        midi_bass = midi_bass * normalization_factor
+    
+    else:
+        midi_bass[midi_bass != 0] = 1    
+
+
+    midi_accompany = mid2arry(midi_accompany)
+    if continuous_velocity:
+        normalization_factor = 1/128
+        midi_accompany = midi_accompany * normalization_factor
+    
+    else:
+        midi_accompany[midi_accompany != 0] = 1        
+
+
+    midi_melody = mid2arry(midi_melody)
+    if continuous_velocity:
+        normalization_factor = 1/128
+        midi_melody = midi_melody * normalization_factor
+    
+    else:
+        midi_melody[midi_melody != 0] = 1    
+
+
+    return midi_rhythm, midi_bass, midi_accompany, midi_melody
+
+def combine_array(midi_rhythm:np.array, midi_bass:np.array, midi_accompany:np.array, midi_melody:np.array)-> np.array:
+    """Function for combining the different arrays
+    Input are rhythm, bass, accompany and melody
+
+    Args:
+        midi_rhythm (np.array): Arr
+        midi_bass (np.array): _description_
+        midi_accompany (np.array): _description_
+        midi_melody (np.array): _description_
+
+    Returns:
+        np.array: Output array where X is the longest input array length and y is the combination of rhythm_dict, bass_dict, accompany_dict and melody_dict. Order of array is: rhythm, bass, accompany and melody
+    """    
+    #To subscript channels
+    midi_rhythm_small = midi_rhythm[:, rhythm_dict()]
+    midi_bass_small = midi_bass[:, bass_dict()]
+    midi_accompany_small = midi_accompany[:, accompany_dict()]
+    midi_melody_small = midi_melody[:, melody_dict()]
+
+    shape_rhythm = np.shape(midi_rhythm_small)
+    shape_bass = np.shape(midi_bass_small)
+    shape_accompany = np.shape(midi_accompany_small)
+    shape_melody = np.shape(midi_melody_small)
+
+    #deciding demensions of output
+    x_length = max(shape_rhythm[0], shape_bass[0], shape_accompany[0], shape_melody[0])
+    y_length = 0
+
+    if include_rhythm:
+        y_length += shape_rhythm[1]
+
+    if include_bass:
+        y_length += shape_bass[1]
+
+    if include_accompany:
+        y_length += shape_accompany[1]
+
+    if include_melody:
+        y_length += shape_melody[1]
+
+
+    combined_array = np.empty((x_length, y_length))
+
+
+    # Add the info from the midi files
+    i = 0
+
+    if include_rhythm:
+        for column in midi_rhythm_small.T:
+
+            combined_array[:shape_rhythm[0], i] = column
+            i = i+ 1
+    
+    if include_bass:
+        for column in midi_bass_small.T:
+            combined_array[:shape_bass[0], i] = column
+            i = i+ 1
+
+    
+    if include_accompany:
+        for column in midi_accompany_small.T:
+            combined_array[:shape_accompany[0], i] = column
+            i = i+ 1
+        
+    if include_melody:
+        for column in midi_melody_small.T:
+            combined_array[:shape_melody[0], i] = column
+            i = i+ 1
+
+    print('First ' + str(i) + ' columns of combined_array filled with data')
+    return combined_array
+
+#############################
+#######Main_functions########
+#############################
+
+
+def folder_to_data_pipeline(song_path:str, target_ticks_per_beat_var:int = 32, current_ticks_per_beat_var:int = 200, output_bars_var:bool = True, include_rhythm_var:bool = True, include_bass_var:bool = True, include_accompany_var:bool = True, include_melody_var:bool = True, continuous_velocity_var:bool = True):
+    """General function from walking the pipeline of a folder with midi_files to a final output file
+
+    Args:
+        song_path (str): Path to folder which contains drums.mid, bass.mid, accompany.mid and melody.mid of 1 song
+        target_ticks_per_beat (int, optional): Decides the ticks_per_beat of the resulting array(s). Defaults to 32.
+        current_ticks_per_beat (int, optional): The ticks_per_beat that the input files adhere to. Defaults to 200.
+        output_bars (bool, optional): Decides whether the output of the function is the bars in a list or just the full array. Defaults to True.
+        include_rhythm (bool, optional): Decides if the rhythm midi is included in the final array. Defaults to True.
+        include_bass (bool, optional): Decides if the bass midi is included in the final array. Defaults to True.
+        include_accompany (bool, optional): Decides if the accompany midi is included in the final array. Defaults to True.
+        include_melody (bool, optional): Decides if the melody midi is included in the final array. Defaults to True.
+        continuous_velocity (bool, optional): Decides the velocity scale. If True the velocity is a continuous scale between 0 and 1 (0 is off, 1 is full velocity). If False, velocity is a binary choice of 0 and 1. Defaults to True.
+
+    Returns:
+     if output_bars = True: List of all bars in the input song
+     if output_bars = False: Np.array with all channels of the input song
+    """  
+
+    # Ensure global variable status for important info
+
+    global target_ticks_per_beat
+    target_ticks_per_beat = target_ticks_per_beat_var
+    global current_ticks_per_beat
+    current_ticks_per_beat = current_ticks_per_beat_var
+    global include_rhythm
+    include_rhythm = include_rhythm_var
+    global include_bass
+    include_bass = include_bass_var
+    global include_accompany
+    include_accompany = include_accompany_var
+    global include_melody 
+    include_melody = include_melody_var
+    global continuous_velocity
+    continuous_velocity = continuous_velocity_var
+    #Pipeline
+    midi_rhythm, midi_bass, midi_accompany, midi_melody = convert_midi_2array(song_path)
+    output = combine_array(midi_rhythm, midi_bass, midi_accompany, midi_melody)
+
+    if output_bars_var:
+
+        output = return_bars(output)
+
+    return output
 
 
 #############################################################################################
@@ -270,13 +470,13 @@ def midi_lookup_table()-> list:
 
 
 
-def extract_events(input_array:np.array, beats_per_minute:int = 120, tick_per_beat:int = 128)-> list:
+def extract_events(input_array:np.array, tick_per_beat:int, beats_per_minute:int)-> list:
     """Function that creates a list of dictionaries based on the input_array. These dictionaries are modeled after the required information for a json input in tone.js
 
     Args:
         input_array (np.array): Input track to be extracted
-        beats_per_minute (int, optional): BPM of the output song. Defaults to 120.
-        tick_per_beat (int, optional): Ticks per beat says how many ticks(numbers) there are for every beat. Defaults to 128 because this is the same as the current model.
+        tick_per_beat (int): Track per beat input time
+        beats_er_minute (int): BPM for the output file
 
     Returns:
         list: Returns a list of dictionaries where each dictionary is a note played in the input array.
@@ -330,7 +530,7 @@ def extract_events(input_array:np.array, beats_per_minute:int = 120, tick_per_be
                 "velocity": float(velocity)
             }
                     #Min length of note is 10 ticks here. AKA roudnly 0.04 seconds
-                    if duration_ticks > 10:
+                    if duration_ticks > 10 and velocity >0.02:
                         events.append(event_dictionary)
             
     return events
@@ -366,25 +566,27 @@ def create_track(input_array:np.array, input_track_events:list, instrument:'str'
 #######Main_functions########
 #############################
 
-def convert_array2json(input_array:np.array, beats_per_minute:int = 120, tick_per_beat:int = 128, midi_name:str = 'placeholder') -> str:
-    """Function for transforming an array with 3 channels (drums,rhythm,lead) into a JSON format that is readable by tone.js
+def convert_array2json(input_array:np.array, output_beats_per_minute:int = 120, input_tick_per_beat:int = 32, midi_name:str = 'placeholder') -> str:
+    """Function for transforming an array with 1-4 channels (rhythm, bass, accompany, melody) into a JSON format that is readable by tone.js
+
 
     Args:
-        input_array (np.array): Array to be converted. Advised format is 2048,384
-        beats_per_minute (int, optional): Sets beats per minute of file. Defaults to 120.
-        tick_per_beat (int, optional): Sets amount of ticks(numbers) per beat. Defaults to 128.
-        midi_name (str, optional): header name within midi file. Defaults to 'placeholder'.
+        input_array (np.array): Input array to transfrom from the model to json
+        output_beats_per_minute (int, optional): Beats per minute of output file. Defaults to 120.
+        input_tick_per_beat (int, optional): Tick per beat used by the input array. Used to convert into time. Defaults to 32.
+        midi_name (str, optional): Name of the resulting midi file in the header. Defaults to 'placeholder'.
 
     Returns:
-        str: string of JSON information about the input array that can be read by tone.js
-    """    
-    
+        str: _description_
+    """
+
+
     ####Header information####
     header = {
     "keySignatures": [],
     "meta": [],
     "name": midi_name,
-    "ppq": tick_per_beat,
+    "ppq": input_tick_per_beat,
     "tempos": [],
     "timeSignatures": [
         {
@@ -399,70 +601,107 @@ def convert_array2json(input_array:np.array, beats_per_minute:int = 120, tick_pe
     }
 
     ####Track information####
-
     #1 bar version
-    track_length = tick_per_beat*4
-    #4 bar version
-    #track_length = tick_per_beat*4*4
+    track_length = input_tick_per_beat*4
 
-    #Convert input track to 1 bar of 4 ticks per beat for demo
-    target_length = tick_per_beat * 4
-    bar_temp = input_array[:512,:]
 
-    bar_shape = np.shape(bar_temp)
-    bar_shortened = np.empty((target_length,bar_shape[1]))
+ ############   ####POSSIBLE expansion to ensure output to 1 bar############################
 
-    for i in range(bar_shape[1]):
-        row = bar_temp[:,i]
-        new_audio_row = row[:8 * target_length].reshape((8, target_length)).mean(axis=0)
-        bar_shortened[:,i] = new_audio_row
-
-    bar_shortened[bar_shortened < 0.02] = 0
-    input_array = bar_shortened
-    #
-
+    # input_array = input_array[:track_length,:]
+#################################################################
 
     #Seperate tracks 
-
-
-    drum_lookup = drum_dict()
+    
     rhythm_lookup = rhythm_dict()
-    lead_lookup = lead_dict()
+    bass_lookup = bass_dict()
+    accompany_lookup = accompany_dict()
+    melody_lookup = melody_dict()
 
-    drum_raw = input_array[:,0:len(drum_lookup)]
-    rhythm_raw = input_array[:,len(drum_lookup):(len(drum_lookup)+len(rhythm_lookup))]
-    lead_raw = input_array[:,(len(drum_lookup)+len(rhythm_lookup)):(len(drum_lookup)+len(rhythm_lookup)+len(lead_lookup))]
+    input_shape = np.shape(input_array)
 
-    drum_new = np.empty((track_length,128))
+    input_channels = []
+
+    if  input_shape[1] == (len(rhythm_lookup)) :
+            print('only_rhythm')
+            rhythm_input = input_array[:,0:len(rhythm_lookup)]
+            input_channels.append(rhythm_input)
+            
+    elif input_shape[1] == (len(rhythm_lookup) + len(bass_lookup)) :
+            print('rhythm and bass')
+            rhythm_input = input_array[:,0:len(rhythm_lookup)]
+            bass_input = input_array[:,len(rhythm_lookup):(len(rhythm_lookup)+len(bass_lookup))]
+
+            input_channels.append(rhythm_input)
+            input_channels.append(bass_input)
+
+    elif input_shape[1] == (len(rhythm_lookup) + len(bass_lookup) + len(accompany_lookup)) :
+            print('rhythm, bass and accompany')
+            rhythm_input = input_array[:,0:len(rhythm_lookup)]
+            bass_input = input_array[:,len(rhythm_lookup):(len(rhythm_lookup)+len(bass_lookup))]
+            accompany_input = input_array[:,(len(rhythm_lookup)+len(bass_lookup)):(len(rhythm_lookup)+len(bass_lookup)+len(accompany_lookup))]
+
+            input_channels.append(rhythm_input)
+            input_channels.append(bass_input)
+            input_channels.append(accompany_input)
+
+
+    elif input_shape[1] == (len(rhythm_lookup) + len(bass_lookup) + len(accompany_lookup) + len(melody_lookup)) :
+            print('rhythm, bass accompany and melody')
+            rhythm_input = input_array[:,0:len(rhythm_lookup)]
+            bass_input = input_array[:,len(rhythm_lookup):(len(rhythm_lookup)+len(bass_lookup))]
+            accompany_input = input_array[:,(len(rhythm_lookup)+len(bass_lookup)):(len(rhythm_lookup)+len(bass_lookup)+len(accompany_lookup))]
+            melody_input = input_array[:,(len(rhythm_lookup)+len(bass_lookup)+len(accompany_lookup)):(len(rhythm_lookup)+len(bass_lookup)+len(accompany_lookup)+len(melody_lookup))]
+    
+            input_channels.append(rhythm_input)
+            input_channels.append(bass_input)
+            input_channels.append(accompany_input)
+            input_channels.append(melody_input)
+    else:
+            print('input shape not applicable to this command. No json was made')
+            return
+
     rhythm_new = np.empty((track_length,128))
-    lead_new = np.empty((track_length,128))
-
-    for i in range(0,len(drum_lookup)):
-        column = drum_raw[:,i] 
-        midi_code = drum_lookup[i]
-        drum_new[:,midi_code] = column
-
-    for i in range(0,len(rhythm_lookup)):
-        column = rhythm_raw[:,i] 
-        midi_code = rhythm_lookup[i]
-        rhythm_new[:,midi_code] = column
-    
-    for i in range(0,len(lead_lookup)):
-        column = lead_raw[:,i] 
-        midi_code = lead_lookup[i]
-        lead_new[:,midi_code] = column
-
-    
+    bass_new = np.empty((track_length,128))
+    accompany_new = np.empty((track_length,128))
+    melody_new = np.empty((track_length,128))
 
 
-    list_of_tracks = [drum_new, rhythm_new, lead_new]
-    track_names = [['drums',10], ['rhythm',11],['lead',12]]
+    #if rhythm channel exists
+    for i in range(0,len(input_channels)):
+          #Rhythm channel
+          if i == 1:
+               for i in range(0,len(rhythm_lookup)):
+                column = rhythm_input[:,i] 
+                midi_code = rhythm_lookup[i]
+                rhythm_new[:,midi_code] = column
+        
+          if i == 2:
+               for i in range(0,len(bass_lookup)):
+                column = bass_input[:,i] 
+                midi_code = bass_lookup[i]
+                bass_new[:,midi_code] = column
+
+          if i == 3:
+               for i in range(0,len(accompany_lookup)):
+                column = accompany_input[:,i] 
+                midi_code = accompany_lookup[i]
+                accompany_new[:,midi_code] = column
+
+          if i == 4:
+               for i in range(0,len(melody_lookup)):
+                column = melody_input[:,i] 
+                midi_code = melody_lookup[i]
+                melody_new[:,midi_code] = column
+
+
+    list_of_tracks = [rhythm_new, bass_new, accompany_new, melody_new]
+    track_names = [['drums',10], ['bass',1],['accompany',2],['melody',3]]
 
 
     # create events list for each instrument
     events = []
     for track in range(0,len(list_of_tracks)):
-        temp_events = extract_events(list_of_tracks[track], beats_per_minute=beats_per_minute, tick_per_beat=tick_per_beat)
+        temp_events = extract_events(list_of_tracks[track], tick_per_beat=input_tick_per_beat, beats_per_minute=output_beats_per_minute)
         events.append(temp_events)
 
     tracks = []
