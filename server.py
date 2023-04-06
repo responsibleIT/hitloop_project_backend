@@ -44,9 +44,11 @@ def generate_midi():
     noise = tf.random.normal([1, 128], seed=seed)
 
     generated_array = model(noise, training=False)
+    np_array = np.array(generated_array).reshape(128, 20)
+
 
     # full_array = x.reshape(input_shape)
-    new_json = midi_functions.convert_array2json(generated_array)
+    new_json = midi_functions.convert_array2json(np_array)
 
     return (new_json)
 
