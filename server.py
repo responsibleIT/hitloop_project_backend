@@ -45,6 +45,11 @@ def generate_midi():
 
     generated_array = model(noise, training=False)
     np_array = np.array(generated_array).reshape(128, 20)
+    
+    #Filter out too low values. Because current model is chance-based all values should be above 0.9. Everythin below changed to 0
+    np_array[np_array < 0.9] = 0
+
+
 
 
     # full_array = x.reshape(input_shape)
