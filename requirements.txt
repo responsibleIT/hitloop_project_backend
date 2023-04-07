@@ -5,3 +5,4 @@ mido>=1.2.10
 numpy>=1.23.5
 python-dotenv>=1.0.0
 tensorflow>=2.12.0
+gunicorn==20.1.0
