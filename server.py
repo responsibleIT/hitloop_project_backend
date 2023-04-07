@@ -2,7 +2,7 @@
 # General
 import numpy as np
 import string
-from flask import Flask, request
+from flask import Flask, request, render_template
 from flask_cors import CORS
 from pathlib import Path
 import shutil
@@ -36,7 +36,12 @@ model = load_model(model_path)
 app = Flask(__name__)
 CORS(app)
 
+#Front page
+@app.route('/', methods=['GET'])
+def index():
+    return render_template('info.html')
 
+#Midi generation page
 @app.route('/test_json', methods=['GET'])
 #Requires input of 128 random numbers as input. In python used tf.random.normal([1,128])
 def generate_midi():

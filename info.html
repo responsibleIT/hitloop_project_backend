@@ -1,0 +1,17 @@
+<h1 style="color: hwb(184 14% 64%);">Hitloop backend info</h1>
+<p>This main page serves as extra information for how the hitloop backend works. The backend outputs a json file that tells tone.js what notes to play at what channel and what velocity.</p>
+<p>The application currently can only generate drums and bass for 1 bar.</p>
+<p>&nbsp;</p>
+<h2 style="color: #2e6c80;">How to generate MIDI:</h2>
+<p>The template for creating the json midi files is:</p>
+<p><span class="ui-provider gp b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak" dir="ltr"><a href="https://api-hitloop.responsible-it.nl/test_json?seed=120">https://api-hitloop.responsible-it.nl/test_json?seed=120</a></span></p>
+<p>&nbsp;</p>
+<p><span class="ui-provider gp b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak" dir="ltr">The seed is a parameter you can set. If you use the same seed, you will get the exact same MIDI returned.</span></p>
+<h2 style="color: #2e6c80;">How to Read the MIDI:</h2>
+<p><span class="ui-provider gp b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak" dir="ltr">The json file is built the header and track info.</span></p>
+<p>The header contains information like the time signature (always 4/4) and ppq. Ppq is information tone.js uses to calculate the time each note will take. You can see it as how many sub-divisions the file can have for each beat. This is always 32 in the model. The temp is kept empty in the MIDI and should be adjusted in the frontend.</p>
+<p>&nbsp;</p>
+<p>The track info contains all tracks of the MIDI file. For now there are a maximum of 2 tracks. The drum track and bass track.</p>
+<p>Each track contains information like the name, instrument and MIDI channel. It also contains 'events' each event says when a note is played, at what pitch, what velocity (how loud) and for how long. The time is given in both seconds and ppq's.</p>
+<p>&nbsp;</p>
+<p><strong>&nbsp;</strong></p>
