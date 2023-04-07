@@ -53,6 +53,7 @@ def generate_midi():
     
     #Filter out too low values. Because current model is chance-based all values should be above 0.9. Everythin below changed to 0
     np_array[np_array < 0.9] = 0
+    np_array[np_array > 1] = 1
 
 
 

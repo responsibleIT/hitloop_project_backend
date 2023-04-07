@@ -707,7 +707,7 @@ def convert_array2json(input_array:np.array, output_beats_per_minute:int = 120, 
     tracks = []
 
     for track in range(0,len(events)):
-        if len(events[track]) > 1:
+        if len(events[track]) >= 1:
             temp_track = create_track(input_array = list_of_tracks[track], input_track_events = events[track], instrument= track_names[track][0],channel= track_names[track][1])
             tracks.append(temp_track)
 
