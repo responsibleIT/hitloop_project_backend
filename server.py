@@ -46,7 +46,8 @@ def index():
 #Requires input of 128 random numbers as input. In python used tf.random.normal([1,128])
 def generate_midi():
     seed = int(request.args.get('seed'))
-    noise = tf.random.normal([1, 128], seed=seed)
+    tf.random.set_seed(seed)
+    noise = tf.random.normal([1, 128])
 
     generated_array = model(noise, training=False)
     np_array = np.array(generated_array).reshape(128, 20)
