@@ -530,10 +530,10 @@ def extract_events(input_array:np.array, tick_per_beat:int, beats_per_minute:int
 
                     #Velocity for now is the velocity of the first tick
                     velocity = note_array[tick]
-                    if velocity > 1:
+                    if velocity > 0.95:
                         velocity = 1.0
                     if velocity <0.001:
-                        velocity = 0.001
+                        velocity = 0
 
                     event_dictionary = {
                 "duration": float(duration),
@@ -675,10 +675,10 @@ def convert_array2json(input_array:np.array, output_beats_per_minute:int = 120, 
             print('input shape not applicable to this command. No json was made')
             return
 
-    rhythm_new = np.empty((track_length,128))
-    bass_new = np.empty((track_length,128))
-    accompany_new = np.empty((track_length,128))
-    melody_new = np.empty((track_length,128))
+    rhythm_new = np.zeros_like(np.empty((track_length,128)))
+    bass_new = np.zeros_like(np.empty((track_length,128)))
+    accompany_new = np.zeros_like(np.empty((track_length,128)))
+    melody_new = np.zeros_like(np.empty((track_length,128)))
 
 
     #if rhythm channel exists
