@@ -452,21 +452,32 @@ def midi_lookup_table()-> list:
     """    
     # Create Name - midicode lookup table 12 notes per octave. for -1 - 9 with all of them. For simplicity we will only use sharps, not flats
     # We will Do this for C#-1 - C9. The others will be added manually since it is more trouble to do that automatically
-    start_notes = ['C#-1', 'D-1', 'D#-1', 'E-1', 'F-1', 'F#-1', 'G-1', 'G#-1', 'A-1', 'A#-1','B-1']
-    end_notes = ['C9', 'C#9', 'D9', 'D#9', 'E9', 'F9', 'F#9', 'G9', 'G#9']
-    notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-    octaves = [0,1,2,3,4,5,6,7,8]
 
-    MIDI_nr_names = start_notes
-    for number in octaves:
-        temp = []
-        for note in notes:
-            new_note = str(note + str(number))
-            MIDI_nr_names.append(new_note)
-    for note in end_notes:
+    pattern = [ 'C',
+    'C#',
+    'D',
+    'D#',
+    'E',
+    'F',
+    'F#',
+    'G',
+    'G#',
+    'A',
+    'A#',
+    'B',]
 
-        MIDI_nr_names.append(note)
-    return MIDI_nr_names
+    octaves= [-1,0,1,2,3,4,5,6,7,8]
+    lookup_table = []
+    for i in octaves:
+        for note in pattern:
+            note_to_add = f'{note}{i}'
+            lookup_table.append(note_to_add)
+
+    final_list = ['C9', 'C#9', 'D9', 'D#9', 'E9', 'F9', 'F#9', 'G9']
+    for note in final_list:
+        lookup_table.append(note)
+
+    return lookup_table
 
 
 
@@ -519,6 +530,10 @@ def extract_events(input_array:np.array, tick_per_beat:int, beats_per_minute:int
 
                     #Velocity for now is the velocity of the first tick
                     velocity = note_array[tick]
+                    if velocity > 1:
+                        velocity = 1.0
+                    if velocity <0.001:
+                        velocity = 0.001
 
                     event_dictionary = {
                 "duration": float(duration),
