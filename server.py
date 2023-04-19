@@ -15,7 +15,6 @@ import midi_functions
 import os
 from dotenv import load_dotenv
 
-
 import random
 
 load_dotenv()
@@ -24,11 +23,12 @@ load_dotenv()
 # directories
 directory = str(Path(__file__).parent.absolute())
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 # import model
 access_token = os.getenv('TOKEN')
 file_name = 'generator.h5'
 model_path = os.path.join(directory, file_name)
-
 
 model = load_model(model_path)
 
@@ -36,14 +36,16 @@ model = load_model(model_path)
 app = Flask(__name__)
 CORS(app)
 
-#Front page
+
+# Front page
 @app.route('/', methods=['GET'])
 def index():
     return render_template('info.html')
 
-#Midi generation page
+
+# Midi generation page
 @app.route('/test_json', methods=['GET'])
-#Requires input of 128 random numbers as input. In python used tf.random.normal([1,128])
+# Requires input of 128 random numbers as input. In python used tf.random.normal([1,128])
 def generate_midi():
     seed = int(request.args.get('seed'))
     tf.random.set_seed(seed)
@@ -51,8 +53,8 @@ def generate_midi():
 
     generated_array = model(noise, training=False)
     np_array = np.array(generated_array).reshape(128, 20)
-    
-    #Filter out too low values. Because current model is chance-based all values should be above 0.9. Everythin below changed to 0
+
+    # Filter out too low values. Because current model is chance-based all values should be above 0.9. Everythin below changed to 0
     np_array[np_array < 0.9] = 0
     np_array[np_array > 1] = 1
 
@@ -61,8 +63,9 @@ def generate_midi():
 
     return (new_json)
 
+
 @app.route('/test_1bass_json', methods=['GET'])
-#Requires input of 128 random numbers as input. In python used tf.random.normal([1,128])
+# Requires input of 128 random numbers as input. In python used tf.random.normal([1,128])
 def generate_midi():
     seed = int(request.args.get('seed'))
     tf.random.set_seed(seed)
@@ -70,21 +73,17 @@ def generate_midi():
 
     generated_array = model(noise, training=False)
     np_array = np.array(generated_array).reshape(128, 20)
-    
-    #Filter out too low values. Because current model is chance-based all values should be above 0.9. Everythin below changed to 0
+
+    # Filter out too low values. Because current model is chance-based all values should be above 0.9. Everythin below changed to 0
     np_array[np_array < 0.9] = 0
     np_array[np_array > 1] = 1
 
-
     np_array_compressed = midi_functions.compress_bass(np_array)
-
-
 
     # full_array = x.reshape(input_shape)
     new_json = midi_functions.convert_array2json(np_array_compressed)
 
     return (new_json)
-
 
 # @app.route('/test_json', methods=['GET'])
 # def example_json():
