@@ -444,6 +444,44 @@ def folder_to_data_pipeline(song_path:str, target_ticks_per_beat_var:int = 32, c
 ############################
 #######sub_functions########
 ############################
+
+# Function to do this
+
+def compress_bass(input_array:np.array):
+    """Function to compress the output of the bass to 1 row. This will always be the one on index 0 of bass_lookup for now.
+    This is not used in the process of transforming midi to json, it would be a pre-processing step
+
+    Args:
+        input_array (np.array): Output of the model
+
+    Returns:
+        np.array: Array where the bass channel is empty except for index 0. This is filled with the rhythm of the bass
+    """    
+    rhythm_lookup = rhythm_dict()
+    bass_lookup = bass_dict()
+    bass_notes = input_array[:,len(rhythm_lookup):(len(rhythm_lookup)+len(bass_lookup))]
+
+    # Create temp arrays
+    bass_shape = np.shape(bass_notes)
+    bass_output = np.zeros(shape= bass_shape)
+
+    compressed_array = np.zeros(shape= bass_shape[0])
+
+    for row in range(bass_shape[0]):
+        all_cols = bass_notes[row,:]
+        max_velocity = np.max(all_cols)
+        if max_velocity > 0:
+            compressed_array[row] = max_velocity
+
+    # Add to note 0 of bass
+    bass_output[:,0] = compressed_array
+
+    output_array = input_array
+    output_array[:,len(rhythm_lookup):(len(rhythm_lookup)+len(bass_lookup))] = bass_output
+
+    return output_array
+
+
 def midi_lookup_table()-> list:
     """function for a table to look up note names and MIDI number codes.
 
