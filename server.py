@@ -23,8 +23,6 @@ load_dotenv()
 # directories
 directory = str(Path(__file__).parent.absolute())
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-
 # import model
 access_token = os.getenv('TOKEN')
 file_name = 'generator.h5'
@@ -66,7 +64,7 @@ def generate_midi():
 
 @app.route('/test_1bass_json', methods=['GET'])
 # Requires input of 128 random numbers as input. In python used tf.random.normal([1,128])
-def generate_midi():
+def generate_base_midi():
     seed = int(request.args.get('seed'))
     tf.random.set_seed(seed)
     noise = tf.random.normal([1, 128])
