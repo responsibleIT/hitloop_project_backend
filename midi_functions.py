@@ -772,5 +772,62 @@ def convert_array2json(input_array:np.array, output_beats_per_minute:int = 120, 
 
     return output_json
 
+
+
+#############################################################################################
+#############################################################################################
+##########################Part 3. Midi evaluation functions##################################
+
+def calculate_unqualified_notes(input_array:np.array)->int:
+    """Function to calculate amount of unqualified notes. This is defined from the MuseGAN paper where a note shorter then a 32nd note is unqualified.
+
+    Args:
+        input_array (np.array): Input array for which the amount of unqualified notes are counted. Array has to be 1 bar of 4/4 beats long to ensure correct counting of note time.
+
+    Returns:
+        int: Amount of unqualified notes
+    """    
+
+    shape = np.shape(input_array)
+    input_ticks_per_beat = int(shape[0]/4)
+    qualified_note = input_ticks_per_beat/8
+
+    unqualified = []
+
+    for i in range(shape[1]):
+        row = input_array[:,i] 
+        sub_arrays = np.split(row, np.where(row == 0)[0])
+        note_lengths = [np.count_nonzero(sub_array) for sub_array in sub_arrays if np.count_nonzero(sub_array) > 0]
+        unqualified_count = len([x for x in note_lengths if x < qualified_note])
+        unqualified.append(unqualified_count)
+
+    n_unqualified = sum(unqualified)
+    return n_unqualified
+
+
+
+def calculate_empty_ratio(input_array:np.array)->float:
+    """Function to calculate ratio of generated MIDI file that has no note playing
+
+    Args:
+        input_array (np.array): input array where it should be calculated from
+    Returns:
+        float: ratio of how much is empty. 1 is an empty array and 0 is a fully filled array
+    """    
+
+    shape = np.shape(input_array)
+
+    n_empty_rows = 0
+
+    for i in range(shape[0]):
+        time_point = input_array[i,:]
+        if np.all(time_point == 0):
+            n_empty_rows+= 1
+
+    ratio = n_empty_rows/shape[0]
+    return ratio
+
+
+
 #############################################################################################
 #############################################################################################
