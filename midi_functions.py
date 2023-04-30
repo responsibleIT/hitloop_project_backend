@@ -15,6 +15,7 @@ from matplotlib import pyplot as plt
 import mido
 import json
 import random
+from scipy import stats
 
 
 target_ticks_per_beat = None
@@ -446,6 +447,33 @@ def folder_to_data_pipeline(song_path:str, target_ticks_per_beat_var:int = 32, c
 ############################
 
 # Function to do this
+
+# Function to do this
+def resize_ouput_length(input_array:np.array, output_length:int=16):
+    """Function for adjusting the output length of the array oto a format appropriate for the sequencer
+
+    Args:
+        input_array (np.array): Array to be reshaped
+        output_length (int, optional): The length of the output array. make sure it is the same as the sequencer length. Defaults to 16.
+
+    Returns:
+        np.array: The new array with dimensions [output_lenght,original_n_columns]
+    """    
+
+    new_array = np.zeros((output_length,5))
+
+    array_shape = np.shape(input_array)
+
+    group_size = array_shape[0] // output_length 
+
+    for i in range(array_shape[1]):
+        temp_row = input_array[:,i]
+        groups = [temp_row[i:i+group_size] for i in range(0, len(temp_row), group_size)]
+        new_row = np.array([stats.mode(group)[0][0] for group in groups])
+        new_array[:,i] = new_row
+    
+    return new_array
+
 
 def compress_bass(input_array:np.array):
     """Function to compress the output of the bass to 1 row. This will always be the one on index 0 of bass_lookup for now.

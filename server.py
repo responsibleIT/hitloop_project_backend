@@ -2,7 +2,7 @@
 # General
 import numpy as np
 import string
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify, send_file
 from flask_cors import CORS
 from pathlib import Path
 import shutil
@@ -42,7 +42,7 @@ def index():
 
 
 # Midi generation page
-@app.route('/test_json', methods=['GET'])
+@app.route('/midi_json', methods=['GET'])
 # Requires input of 128 random numbers as input. In python used tf.random.normal([1,128])
 def generate_midi():
     seed = int(request.args.get('seed'))
@@ -62,7 +62,7 @@ def generate_midi():
     return (new_json)
 
 
-@app.route('/test_1bass_json', methods=['GET'])
+@app.route('/midi_compressed_json', methods=['GET'])
 # Requires input of 128 random numbers as input. In python used tf.random.normal([1,128])
 def generate_base_midi():
     seed = int(request.args.get('seed'))
@@ -83,12 +83,42 @@ def generate_base_midi():
 
     return (new_json)
 
-# @app.route('/test_json', methods=['GET'])
-# def example_json():
 
-#     midi_path = str(directory + '/' +'test_midi.json')
-#     midi = open (midi_path, "r")
 
-#     json_midi = json.load(midi)
+@app.route('/sequencer_json', methods=['GET'])
+# Requires input of 128 random numbers as input. In python used tf.random.normal([1,128])
+def generate_sequencer_json():
+    seed = int(request.args.get('seed'))
+    tf.random.set_seed(seed)
+    noise = tf.random.normal([1, 128])
 
-#     return(json_midi)
+    generated_array = model(noise, training=False)
+    np_array = np.array(generated_array).reshape(128, 20)
+
+    # Filter out too low values. Because current model is chance-based all values should be above 0.9. Everythin below changed to 0
+    np_array[np_array < 0.9] = 0
+    np_array[np_array > 1] = 1
+
+    np_array_compressed = midi_functions.compress_bass(np_array)
+
+    np_array_final = midi_functions.resize_ouput_length(np_array_compressed, output_length=16)
+
+    new_json = json.dumps(np_array_final.tolist())
+
+    return (new_json)
+
+############### Samples part ###############
+
+@app.route('/samples_list', methods=['GET'])
+def generate_samples_list():
+    samples_folder_path = os.path.join(directory, 'samples')
+    samples_available = os.listdir(samples_folder_path)
+    return jsonify(files=samples_available)
+
+
+@app.route('/samples', methods=['GET'])
+def get_sample():
+    file_name = str(request.args.get('file'))
+    samples_folder_path = os.path.join(directory, 'samples')
+    audio_path = os.path.join(samples_folder_path, file_name)
+    return send_file(audio_path)

@@ -4,11 +4,14 @@
 <p>&nbsp;</p>
 <h2 style="color: #2e6c80;">How to generate MIDI:</h2>
 <p>The template for creating the json midi files is:</p>
-<p><span class="ui-provider gp b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak" dir="ltr"><a href="https://api-hitloop.responsible-it.nl/test_json?seed=120">https://api-hitloop.responsible-it.nl/test_json?seed=120</a></span></p>
+<p><span class="ui-provider gp b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak" dir="ltr"><a href="https://api-hitloop.responsible-it.nl/test_json?seed=120">https://api-hitloop.responsible-it.nl/midi_json?seed=120</a></span></p>
 <p><span class="ui-provider gp b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak" dir="ltr">The seed is a parameter you can set. If you use the same seed, you will get the exact same MIDI returned.</span></p>
 <p>&nbsp;</p>
 <p><span class="ui-provider gp b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak" dir="ltr">To return the version where all bass data is always on 1 note, use the following version:</span></p>
-<p><span class="ui-provider gp b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak" dir="ltr"><a href="https://api-hitloop.responsible-it.nl/test_json?seed=120">https://api-hitloop.responsible-it.nl/test_1bass_json?seed=120</a></span></p>
+<p><span class="ui-provider gp b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak" dir="ltr"><a href="https://api-hitloop.responsible-it.nl/test_json?seed=120">https://api-hitloop.responsible-it.nl/midi_compressed_json?seed=120</a></span></p>
+<p>&nbsp;</p>
+<p><span class="ui-provider gp b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak" dir="ltr">Lastly there is a version which returns the numpy array corresponding to a sequencer of 5 channels by 16 time steps.</span></p>
+<p><span class="ui-provider gp b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak" dir="ltr"><a href="https://api-hitloop.responsible-it.nl/test_json?seed=120">https://api-hitloop.responsible-it.nl/sequencer_json?seed=120</a></span></p>
 <h2 style="color: #2e6c80;">How to Read the MIDI:</h2>
 <p><span class="ui-provider gp b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak" dir="ltr">The json file is built the header and track info.</span></p>
 <p>The header contains information like the time signature (always 4/4) and ppq. Ppq is information tone.js uses to calculate the time each note will take. You can see it as how many sub-divisions the file can have for each beat. This is always 32 in the model. The temp is kept empty in the MIDI and should be adjusted in the frontend.</p>
@@ -18,15 +21,22 @@
 <p>&nbsp;</p>
 <p>The way to import this json into the MIDI can be quite confusing. I recommend looking at this Github repo for how to import MIDI into the audio. The Json you can get from the API is already in the correct format so you can change</p>
 <pre><span class="pl-k">const</span> <span class="pl-s1">midi</span> <span class="pl-c1">=</span> <span class="pl-k">await</span> <span class="pl-v">Midi</span><span class="pl-kos">.</span><span class="pl-en">fromUrl</span><span class="pl-kos">(</span><span class="pl-s">"path/to/midi.mid"</span><span class="pl-kos">)<br /><br />to <br /></span></pre>
-<p>fetch('https://api-hitloop.responsible-it.nl/test_json?seed=120')<br />.then(response =&gt; response.json())<br />.then(json =&gt; {<br />const midi = json;<br />console.log(midi);<br />})<br />.catch(error =&gt; console.error(error));</p>
+<p>fetch('https://api-hitloop.responsible-it.nl/<span class="ui-provider gp b c d e f g h i j k l m n o p q r s t u v w x y z ab ac ae af ag ah ai aj ak" dir="ltr"><a href="https://api-hitloop.responsible-it.nl/test_json?seed=120">midi_json</a></span>?seed=120')<br />.then(response =&gt; response.json())<br />.then(json =&gt; {<br />const midi = json;<br />console.log(midi);<br />})<br />.catch(error =&gt; console.error(error));</p>
 <pre><span class="pl-kos"><br />This will save the json as the const midi.<br />You can then use this in tone.js</span></pre>
 <p><a href="https://github.com/Tonejs/Midi">https://github.com/Tonejs/Midi.</a></p>
+<p>&nbsp;</p>
+<h2 style="color: #2e6c80;">How to get samples</h2>
+<p>We will host samples on the api-hitloop.responsible-it.nl/samples?file=TEMP</p>
+<p>To get the list of available files call:</p>
+<p>api-hitloop.responsible-it.nl/samples_list</p>
 <p>&nbsp;</p>
 <h2 style="color: #2e6c80;">Inspiration for tone.js</h2>
 <p>There are alot of examples on the tone.js website on how to use the application</p>
 <p>To play audio you need to insert notes into an instrument. Simplest to implement is PolySynth. For samples you need the sampler. Information here: <a href="https://tonejs.github.io/docs/14.7.77/index.html">https://tonejs.github.io/docs/14.7.77/index.html</a></p>
 <p>&nbsp;</p>
 <p>A list of prototypes using tone.js can be found here. You can use it as inspiration for how to code certain aspects: <a href="https://tonejs.github.io/demos">https://tonejs.github.io/demos</a></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 <h2 style="color: #2e6c80;">Patch_notes:</h2>
