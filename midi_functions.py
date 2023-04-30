@@ -460,16 +460,16 @@ def resize_ouput_length(input_array:np.array, output_length:int=16):
         np.array: The new array with dimensions [output_lenght,original_n_columns]
     """    
 
-    new_array = np.zeros((output_length,5))
-
     array_shape = np.shape(input_array)
+
+    new_array = np.zeros((output_length,array_shape[1]))
 
     group_size = array_shape[0] // output_length 
 
     for i in range(array_shape[1]):
         temp_row = input_array[:,i]
         groups = [temp_row[i:i+group_size] for i in range(0, len(temp_row), group_size)]
-        new_row = np.array([stats.mode(group)[0][0] for group in groups])
+        new_row = np.array([int(stats.mode(group)[0][0]) for group in groups])
         new_array[:,i] = new_row
     
     return new_array
@@ -684,12 +684,6 @@ def convert_array2json(input_array:np.array, output_beats_per_minute:int = 120, 
     ####Track information####
     #1 bar version
     track_length = input_tick_per_beat*4
-
-
- ############   ####POSSIBLE expansion to ensure output to 1 bar############################
-
-    # input_array = input_array[:track_length,:]
-#################################################################
 
     #Seperate tracks 
     
