@@ -99,9 +99,10 @@ def generate_sequencer_json():
     np_array[np_array < 0.9] = 0
     np_array[np_array > 1] = 1
 
-    np_array_compressed = midi_functions.compress_bass(np_array)
+    np_array_compressed = midi_functions.compress_bass(np_array)[:,0:5]
 
     np_array_final = midi_functions.resize_ouput_length(np_array_compressed, output_length=16)
+    print(np.shape(np_array_final))
 
     new_json = json.dumps(np_array_final.tolist())
 
