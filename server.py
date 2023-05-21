@@ -7,6 +7,7 @@ from flask_cors import CORS
 from pathlib import Path
 import shutil
 import json
+import random
 
 # Model
 import tensorflow as tf
@@ -107,6 +108,29 @@ def generate_sequencer_json():
     new_json = json.dumps(np_array_final.tolist())
 
     return (new_json)
+
+
+@app.route('/sequencer_random_json', methods=['GET'])
+def generate_sequencer_json():
+    seed = int(request.args.get('seed'))
+    random.seed(seed)
+
+    n_col = 5
+    n_row = 16
+
+    main_list = []
+    for row in range(n_row):
+        sub_list = []
+
+        for col in range(n_col):
+            number = float(random.randint(0,1))
+            sub_list.append(number)
+        main_list.append(sub_list)
+
+    new_json = json.dumps(main_list)
+
+    return (new_json)
+
 
 ############### Samples part ###############
 
