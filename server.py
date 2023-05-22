@@ -111,7 +111,7 @@ def generate_sequencer_json():
 
 
 @app.route('/sequencer_random_json', methods=['GET'])
-def generate_sequencer_json():
+def generate_random_sequencer_json():
     seed = int(request.args.get('seed'))
     random.seed(seed)
 
@@ -134,6 +134,15 @@ def generate_sequencer_json():
 
 ############### Samples part ###############
 
+@app.route('/samples_test_list', methods=['GET'])
+# Function for getting the AB test versions of samples
+def generate_test_samples_list():
+    sample_pack = str(request.args.get('sample_pack'))
+    samples_folder_path = os.path.join(directory, f'samples_{sample_pack}')
+    samples_available = os.listdir(samples_folder_path)
+    return jsonify(files=samples_available)
+
+
 @app.route('/samples_list', methods=['GET'])
 def generate_samples_list():
     samples_folder_path = os.path.join(directory, 'samples')
@@ -145,5 +154,14 @@ def generate_samples_list():
 def get_sample():
     file_name = str(request.args.get('file'))
     samples_folder_path = os.path.join(directory, 'samples')
+    audio_path = os.path.join(samples_folder_path, file_name)
+    return send_file(audio_path)
+
+@app.route('/test_samples', methods=['GET'])
+# Function for getting the AB test versions of samples
+def get_test_sample():
+    file_name = str(request.args.get('file'))
+    sample_pack = str(request.args.get('sample_pack'))
+    samples_folder_path = os.path.join(directory, f'samples_{sample_pack}')
     audio_path = os.path.join(samples_folder_path, file_name)
     return send_file(audio_path)
