@@ -85,7 +85,6 @@ def generate_base_midi():
     return (new_json)
 
 
-
 @app.route('/sequencer_json', methods=['GET'])
 # Requires input of 128 random numbers as input. In python used tf.random.normal([1,128])
 def generate_sequencer_json():
@@ -100,7 +99,7 @@ def generate_sequencer_json():
     np_array[np_array < 0.9] = 0
     np_array[np_array > 1] = 1
 
-    np_array_compressed = midi_functions.compress_bass(np_array)[:,0:5]
+    np_array_compressed = midi_functions.compress_bass(np_array)[:, 0:5]
 
     np_array_final = midi_functions.resize_ouput_length(np_array_compressed, output_length=16)
     print(np.shape(np_array_final))
@@ -123,13 +122,14 @@ def generate_random_sequencer_json():
         sub_list = []
 
         for col in range(n_col):
-            number = float(random.randint(0,1))
+            number = float(random.randint(0, 1))
             sub_list.append(number)
         main_list.append(sub_list)
 
     new_json = json.dumps(main_list)
 
     return (new_json)
+
 
 @app.route('/sequencer_n_random_json', methods=['GET'])
 def generate_random_n_sequencer_json():
@@ -146,7 +146,7 @@ def generate_random_n_sequencer_json():
         sub_list = []
 
         for col in range(n_col):
-            number = float(random.randint(0,1))
+            number = float(random.randint(0, 1))
             sub_list.append(number)
         main_list.append(sub_list)
 
@@ -179,6 +179,7 @@ def get_sample():
     samples_folder_path = os.path.join(directory, 'samples')
     audio_path = os.path.join(samples_folder_path, file_name)
     return send_file(audio_path)
+
 
 @app.route('/test_samples', methods=['GET'])
 # Function for getting the AB test versions of samples
