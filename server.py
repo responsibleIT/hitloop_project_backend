@@ -131,6 +131,29 @@ def generate_random_sequencer_json():
 
     return (new_json)
 
+@app.route('/sequencer_n_random_json', methods=['GET'])
+def generate_random_n_sequencer_json():
+    n = request.args.get('n')
+
+    seed = int(request.args.get('seed'))
+    random.seed(seed)
+
+    n_col = int(n)
+    n_row = 16
+
+    main_list = []
+    for row in range(n_row):
+        sub_list = []
+
+        for col in range(n_col):
+            number = float(random.randint(0,1))
+            sub_list.append(number)
+        main_list.append(sub_list)
+
+    new_json = json.dumps(main_list)
+
+    return (new_json)
+
 
 ############### Samples part ###############
 
